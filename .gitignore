@@ -1,0 +1,6 @@
+# Build/dependency artifacts
+*.log
+*.zip
+
+# Module temp data (Dolibarr data dir is outside the module anyway)
+/temp/
