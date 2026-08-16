@@ -72,3 +72,7 @@ php tests/integration/simulate_webhook.php
 ## 阶段规划
 
 详见开发规格：V0.2（更多事件/标签/Markdown 消息/Trigger 通知）→ V0.3（钉钉/飞书抽象）→ V0.4（Agent Skill/MCP）。
+
+## 开发约定
+
+本模块遵循 [custom/DOLIBARR-MODULE-DEVELOPMENT.md](../DOLIBARR-MODULE-DEVELOPMENT.md) 中的最佳实践与 AI 协作红线。
