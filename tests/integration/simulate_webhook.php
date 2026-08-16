@@ -13,7 +13,7 @@ if (PHP_SAPI !== 'cli') {
 	die('CLI only');
 }
 
-define('DOL_DOCUMENT_ROOT', 'D:/dolibarr/www/dolibarr/htdocs');
+define('DOL_DOCUMENT_ROOT', dirname(__DIR__, 4)); // <module>/tests/integration -> htdocs
 
 // Minimal Dolibarr bootstrap to read decrypted constants
 global $conf, $db;
@@ -21,7 +21,7 @@ global $conf, $db;
 
 // Fallback: read conf.php manually
 if (empty($db) || !is_object($db)) {
-	$confFile = 'D:/dolibarr/www/dolibarr/htdocs/conf/conf.php';
+	$confFile = DOL_DOCUMENT_ROOT.'/conf/conf.php';
 	$cont = file_get_contents($confFile);
 	preg_match('/\$dolibarr_main_db_host=\'([^\']+)\'/', $cont, $m1);
 	preg_match('/\$dolibarr_main_db_name=\'([^\']+)\'/', $cont, $m2);
@@ -30,9 +30,9 @@ if (empty($db) || !is_object($db)) {
 	$db = mysqli_connect($m1[1], $m3[1], $m4[1], $m2[1]);
 }
 
-require 'D:/dolibarr/www/dolibarr/htdocs/custom/wecom/class/wecomcrypt.class.php';
+require dirname(__DIR__, 2).'/class/wecomcrypt.class.php';
 
-$WEBHOOK_URL = 'http://localhost/dolibarr/custom/wecom/wecom/webhook.php';
+$WEBHOOK_URL = getenv('WECOM_WEBHOOK_URL') ?: 'http://localhost/dolibarr/custom/wecom/wecom/webhook.php';
 
 // Read config constants, transparently decrypting dolcrypt: values
 // (same algorithm as dolDecrypt(): aes-256-cbc? no - MAIN_SECURITY_REVERSIBLE_ALGO, key = instance unique id)
@@ -61,7 +61,7 @@ function getConst($db, $name)
 	$row = mysqli_fetch_row($res);
 	$value = (string) $row[0];
 	if (strncmp($value, 'dolcrypt:', 9) === 0) {
-		$confFile = 'D:/dolibarr/www/dolibarr/htdocs/conf/conf.php';
+		$confFile = DOL_DOCUMENT_ROOT.'/conf/conf.php';
 		if (preg_match("/\\\$dolibarr_main_instance_unique_id='([^']+)'/", file_get_contents($confFile), $m)) {
 			$value = dolDecryptMinimal($value, $m[1]);
 		}

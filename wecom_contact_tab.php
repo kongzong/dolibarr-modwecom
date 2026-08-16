@@ -108,6 +108,49 @@ if ($action == 'sendmessage' && $user->hasRight('wecom', 'message')) {
 	$action = '';
 }
 
+// Manual binding (spec §15 level 2: admin designates the binding)
+if ($action == 'bind' && $user->hasRight('wecom', 'write')) {
+	$externalUserId = GETPOST('bind_external_userid', 'alphanohtml');
+	if ($externalUserId !== '') {
+		$map = new WeComContactMap($db);
+		if ($map->fetchByExternalUserId($externalUserId) > 0) {
+			// Already mapped: allowed to rebind to this thirdparty if not bound here
+			if ((int) $map->fk_soc == (int) $id) {
+				setEventMessages($langs->trans("WeComAlreadyBoundHere"), null, 'warnings');
+			} else {
+				$sql = "UPDATE ".$db->prefix()."wecom_contact_map SET fk_soc = ".((int) $id).", status = 1 WHERE rowid = ".((int) $map->id);
+				if ($db->query($sql)) {
+					setEventMessages($langs->trans("WeComRebound"), null, 'mesgs');
+				} else {
+					setEventMessages($langs->trans("Error"), null, 'errors');
+				}
+			}
+		} else {
+			// Unknown here: fetch details from WeCom and create the mapping (no thirdparty/contact creation)
+			try {
+				$wecomApi = new WeComApi($db);
+				$detail = $wecomApi->getExternalContactDetail($externalUserId);
+				$external = isset($detail['external_contact']) ? $detail['external_contact'] : array();
+				$extra = array(
+					'wecom_type' => isset($external['type']) ? (int) $external['type'] : 0,
+					'wecom_name' => isset($external['name']) ? $external['name'] : '',
+					'wecom_avatar' => isset($external['avatar']) ? $external['avatar'] : '',
+					'wecom_corp_name' => isset($external['corp_name']) ? $external['corp_name'] : '',
+				);
+				$result = $map->create($externalUserId, (int) $id, 0, $extra);
+				if ($result > 0) {
+					setEventMessages($langs->trans("WeComBound"), null, 'mesgs');
+				} else {
+					setEventMessages($langs->trans("Error"), null, 'errors');
+				}
+			} catch (WeComApiException $e) {
+				setEventMessages($e->getMessage().' (errcode='.$e->getErrorCode().')', null, 'errors');
+			}
+		}
+	}
+	$action = '';
+}
+
 llxHeader('', $langs->trans("WeCom"));
 
 $head = societe_prepare_head($object);
@@ -187,6 +230,22 @@ if (empty($mappings)) {
 		print '</table>';
 		print '</form>';
 	}
+}
+
+// Manual binding form (spec §15 level 2)
+if ($user->hasRight('wecom', 'write')) {
+	print '<br>';
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$id.'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<input type="hidden" name="action" value="bind">';
+	print '<table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("WeComBindTitle").'</td></tr>';
+	print '<tr><td class="titlefield">'.$langs->trans("ExternalUserId").'</td><td>';
+	print '<input type="text" class="flat minwidth400" name="bind_external_userid" placeholder="wmxxxxxxxx" required>';
+	print ' <span class="opacitymedium">'.$langs->trans("WeComBindHelp").'</span></td></tr>';
+	print '<tr><td></td><td><input class="button" type="submit" value="'.$langs->trans("WeComBind").'"></td></tr>';
+	print '</table>';
+	print '</form>';
 }
 
 print dol_get_fiche_end();

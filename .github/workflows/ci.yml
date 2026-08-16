@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.1', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: openssl, mbstring, curl
+
+      - name: Syntax check
+        run: find . -path ./.git -prune -o -name "*.php" -print | xargs -n1 php -l
+
+      - name: Unit tests
+        run: php tests/run_all.php
+
+      - name: Webhook crypto self-test
+        run: |
+          php -r '
+          require "class/wecomcrypt.class.php";
+          require "class/wecomeventlog.class.php";
+          $sig = WeComCrypt::signature("t", "1", "2", "e");
+          if (!WeComCrypt::verify("t", "1", "2", "e", $sig)) { exit(1); }
+          $c = WeComCrypt::encrypt("msg", substr(str_repeat("abcdefghij",5),0,43), "wwtest");
+          if (WeComCrypt::decrypt($c, substr(str_repeat("abcdefghij",5),0,43), "wwtest") !== "msg") { exit(1); }
+          echo "crypto OK\n";
+          '
