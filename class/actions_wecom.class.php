@@ -23,8 +23,11 @@
 
 /**
  * Actions hooks for WeCom module
+ *
+ * Note: HookManager expects the class name 'Actions'.ucfirst('wecom') = ActionsWecom
+ * (see htdocs/core/class/hookmanager.class.php:152).
  */
-class ActionsWeCom
+class ActionsWecom
 {
 	/**
 	 * @var DoliDB Database handler
@@ -61,7 +64,7 @@ class ActionsWeCom
 	{
 		global $langs;
 
-		if (!in_array('mainloginpage', explode(',', $parameters['context']))) {
+		if (!in_array('mainloginpage', explode(':', (string) $parameters['context']))) {
 			return 0;
 		}
 		if (!getDolGlobalString('WECOM_CORP_ID') || !(int) getDolGlobalString('WECOM_AGENT_ID')) {

@@ -54,7 +54,7 @@ class WecomOauthTest extends TestCase
 	public function testLoginPageHook()
 	{
 		$content = file_get_contents(__DIR__.'/../../class/actions_wecom.class.php');
-		$this->assertStringContainsString('class ActionsWeCom', $content);
+		$this->assertStringContainsString('class ActionsWecom', $content);
 		$this->assertStringContainsString('getLoginPageOptions', $content);
 	}
 
