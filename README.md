@@ -75,4 +75,4 @@ php tests/integration/simulate_webhook.php
 
 ## 开发约定
 
-本模块遵循 [custom/DOLIBARR-MODULE-DEVELOPMENT.md](../DOLIBARR-MODULE-DEVELOPMENT.md) 中的最佳实践与 AI 协作红线。
+本模块遵循 [custom/DOLIBARR-MODULE-DEVELOPMENT.md](../DOLIBARR-MODULE-DEVELOPMENT.md) 中的最佳实践与 AI 协作红线；本机环境、模块状态与交接信息见 [custom/AGENTS.md](../AGENTS.md)。
